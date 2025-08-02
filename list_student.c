@@ -44,7 +44,7 @@ float total_score(struct SV student[], int n)
     }
     return total;
 }
-void soft_student_score(struct SV student[], int n)
+void sort_student_score (struct SV student[], int n)
 {
     // Đây sử dụng bubble soft
     for (int i = 0; i < n - 1; i++)
@@ -53,9 +53,9 @@ void soft_student_score(struct SV student[], int n)
         {
             if (student[j].score > student[j + 1].score)
             {
-                float temp = student[j].score;
-                student[j].score = student[j + 1].score;
-                student[j + 1].score = temp;
+                struct SV temp = student[j];
+                student[j] = student[j + 1];
+                student[j + 1] = temp;
             }
         }
     }
@@ -106,7 +106,7 @@ int main()
     min_score = find_min_max(student, n, true);
     max_score = find_min_max(student, n, false);
 
-    soft_student_score(student, n);
+    sort_student_score (student, n);
     print_score(student, n);
     printf(" Diem thap nhat la %0.2f \n", min_score);
     printf(" Diem cao nhat la %0.2f", max_score);
