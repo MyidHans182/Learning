@@ -1,0 +1,72 @@
+# Dự án Robot Tự Cân Bằng 2 Bánh với Cơ cấu Hông (Arduino)
+
+## Giới thiệu
+Đây là mã nguồn điều khiển cho một robot tự cân bằng hai bánh, được trang bị thêm một cơ cấu hông (hip mechanism) để thay đổi chiều cao và trọng tâm. Robot sử dụng bộ điều khiển LQR (Linear-Quadratic Regulator) để giữ thăng bằng và di chuyển, kết hợp với bộ điều khiển PID (hoặc Fuzzy logic) để điều khiển vị trí của cơ cấu hông.
+
+Mã nguồn này đã được tái cấu trúc (refactoring) thành các module riêng biệt, giúp việc đọc hiểu, bảo trì, và phát triển trở nên dễ dàng hơn so với việc viết tất cả trong một tệp duy nhất.
+
+## Tính năng chính ✨
+- **Tự cân bằng**: Sử dụng cảm biến IMU MPU9250 và bộ điều khiển LQR để duy trì trạng thái cân bằng động.
+- **Điều khiển di chuyển**: Cho phép robot di chuyển tiến, lùi và xoay.
+- **Cơ cấu hông linh hoạt**: Điều khiển động cơ DC ở hông để thay đổi chiều cao của robot, đi theo một quỹ đạo đặt trước.
+- **Mã nguồn Module hóa**: Code được phân chia rõ ràng thành các tệp chức năng (cảm biến, điều khiển động cơ, thuật toán, giao tiếp).
+- **Cấu hình tập trung**: Tất cả các thông số quan trọng (chân cắm, hằng số PID/LQR, offset cảm biến) đều được đặt trong tệp `config.h` để dễ dàng tinh chỉnh.
+- **Giao tiếp qua Serial**: Nhận lệnh điều khiển và gửi dữ liệu trạng thái (telemetry) về máy tính để giám sát và gỡ lỗi.
+
+## Yêu cầu Phần cứng ⚙️
+- **Vi điều khiển**: Arduino Mega 2560 (hoặc một board tương tự có đủ chân ngắt và ngoại vi).
+- **Cảm biến**: IMU MPU9250 (hoặc MPU9150/MPU6050 với một vài chỉnh sửa nhỏ).
+- **Động cơ**:
+  - 2 x Động cơ DC có encoder cho hai bánh xe.
+  - 1 x Động cơ DC có encoder cho cơ cấu hông.
+- **Mạch điều khiển động cơ (Driver)**: 3 x Mạch cầu H (ví dụ: L298N) để điều khiển 3 động cơ.
+- **Nguồn điện**: Pin LiPo hoặc nguồn DC phù hợp với điện áp của động cơ.
+- **Khung robot**: Khung cơ khí cho robot 2 bánh và cơ cấu hông.
+
+## Phần mềm & Thư viện 📚
+- **IDE**: Arduino IDE
+- **Thư viện cần cài đặt**:
+  - I2Cdev
+  - MPU9250 (hoặc thư viện tương ứng với cảm biến của bạn)
+  - TimerOne
+  - TimerFour
+
+Cách cài đặt thư viện: Mở Arduino IDE, vào **Sketch** -> **Include Library** -> **Manage Libraries....** Tìm kiếm tên thư viện và nhấn **Install**.
+
+## Cấu trúc Mã nguồn 📁
+Dự án được tổ chức thành các tệp logic để quản lý code hiệu quả:
+- **main.cpp**: Tệp chính của Arduino, chứa các hàm `setup()` và `loop()`. Nó điều phối hoạt động của các module khác.
+- **config.h**: Tệp quan trọng nhất để tinh chỉnh. Chứa tất cả các hằng số, chân cắm (pin), và tham số cho bộ điều khiển (PID, LQR).
+- **globals.h / globals.cpp**: Quản lý tất cả các biến toàn cục (biến trạng thái của robot), giúp tránh xung đột và dễ theo dõi.
+- **imu_sensor.h / imu_sensor.cpp**: Module dành riêng cho cảm biến IMU. Chịu trách nhiệm khởi tạo, đọc và xử lý dữ liệu góc và gia tốc.
+- **motor_control.h / motor_control.cpp**: Module điều khiển tất cả các động cơ. Bao gồm các hàm điều khiển PWM, đọc encoder, và xử lý ngắt (ISR).
+- **controller.h / controller.cpp**: Bộ não của robot. Chứa logic điều khiển chính như thuật toán LQR, PID cho động cơ hông, và các hàm tính toán quỹ đạo.
+- **communication.h / communication.cpp**: Module xử lý giao tiếp qua cổng Serial. Chịu trách nhiệm nhận lệnh điều khiển từ máy tính và gửi dữ liệu trạng thái về.
+
+## Cài đặt và Chạy thử 🚀
+1. **Clone/Tải về**: Tải toàn bộ các tệp mã nguồn vào một thư mục trên máy tính của bạn.
+2. **Lắp đặt Phần cứng**: Kết nối tất cả các thành phần (vi điều khiển, cảm biến, driver, động cơ) theo sơ đồ chân đã định nghĩa trong tệp `config.h`.
+3. **Cài đặt Thư viện**: Mở Arduino IDE và cài đặt các thư viện được liệt kê ở trên.
+4. **Hiệu chỉnh config.h**:
+   - Đảm bảo các chân cắm trong `chan_out` và `chan_in` khớp với kết nối phần cứng của bạn.
+   - Quan trọng: Chạy một sketch hiệu chỉnh MPU9250 riêng để tìm các giá trị offset cho cảm biến của bạn và cập nhật chúng trong `config.h`.
+5. **Biên dịch và Nạp code**: Mở tệp `.ino` bằng Arduino IDE, chọn đúng loại board (Arduino Mega 2560) và cổng COM, sau đó nhấn nút **Upload**.
+6. **Giám sát**: Mở **Serial Monitor** (tốc độ baud 115200) để xem dữ liệu telemetry từ robot.
+
+## Giao thức Giao tiếp 📡
+- **Robot nhận các lệnh điều khiển** qua Serial3 dưới dạng các ký tự đơn, theo sau là các giá trị số nếu cần.
+  - `'U'`: Tiến một chút.
+  - `'D'`: Lùi một chút.
+  - `'R'`: Xoay phải một chút.
+  - `'L'`: Xoay trái một chút.
+  - `'H'`: Dừng di chuyển (vẫn giữ thăng bằng).
+  - `'P'`: Gửi thông số LQR mới. Ví dụ: `P20.6,38.8,915,510,40,45`
+  - `'I'`: Gửi thông số PID và góc đặt cho hông. Ví dụ: `I-15,0.3,0.01,45.0`
+  
+- **Dữ liệu gửi từ robot về máy tính (qua Serial)** có định dạng: `a<val>b<val>c<val>...k` để dễ dàng phân tích bằng các phần mềm như **Processing** hoặc **Python**.
+
+## Tác giả
+(Nguyen Minh Hoang)
+
+## Giấy phép
+Dự án này được cấp phép theo Giấy phép MIT - xem tệp `LICENSE.md` để biết chi tiết.
